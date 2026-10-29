@@ -1,0 +1,38 @@
+schema_version = "1.4"
+artifacts = []
+
+[task]
+name = "hep-cce/frnn-exact-optimization"
+version = "0.1.0"
+description = "Speed up exact fixed-radius nearest-neighbor edge building (libFRNN, CUDA) on a real tracking event without changing its results."
+keywords = ["hep", "cuda", "performance", "gnn-tracking"]
+[[task.authors]]
+name = "Xiangyang Ju"
+
+[metadata]
+upstream_repository = "https://github.com/xju2/libFRNN"
+upstream_commit = "5ce9f21e2a2f12edfc5734fdd31973098a2f8d6d"
+base_environment = "https://github.com/xju2/agent-env-frnn"
+
+[verifier]
+# Builds baseline, expert (v1.1.0) and agent, then times all three on the held-out event.
+timeout_sec = 3600.0
+environment_mode = "shared"
+collect = []
+
+[verifier.env]
+TIMED_ITERATIONS = "10"
+
+[agent]
+timeout_sec = 18000.0
+
+[environment]
+network_mode = "public"
+build_timeout_sec = 1800.0
+os = "linux"
+gpus = 1
+mcp_servers = []
+
+[environment.env]
+
+[solution.env]
