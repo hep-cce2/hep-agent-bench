@@ -1,0 +1,10 @@
+# Pins the GPU. Pick the index from `nvidia-smi -L` on the host, e.g. FRNN_GPU=1 harbor run ...
+services:
+  main:
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              device_ids: ["${FRNN_GPU:-0}"]
+              capabilities: [gpu]
