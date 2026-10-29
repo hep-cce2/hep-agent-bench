@@ -7,5 +7,5 @@ A real-life development event is in `data/embedding_data.csv` (271,663 points in
 How your work is graded, after you finish:
 
 - Your final working tree in `/workspace/libFRNN` is built as the Python package `frnn` (`pip install --no-build-isolation .`). Keep the public `frnn.build_edges(points, radius=..., max_neighbors=..., directed=True)` API.
-- Correctness is checked on a different, held-out event with the same settings (`radius=0.12`, `max_neighbors=1000`, directed). The set of edges must match the exact brute-force result exactly.
-- If it is correct, the median wall-clock time of `frnn.build_edges` is compared with the original implementation on the same GPU. A larger speedup earns a higher score; incorrect results score zero.
+- Correctness is checked on 50 held-out events, all different from the development event, with the same settings (`radius=0.12`, `max_neighbors=1000`, directed). For every one of them, the set of edges must match the exact brute-force result exactly.
+- If it is correct, the median wall-clock time of `frnn.build_edges` on a subset of these events is compared with the original implementation on the same GPU. A larger speedup earns a higher score; incorrect results score zero.

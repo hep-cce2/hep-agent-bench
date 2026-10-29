@@ -2,7 +2,7 @@ schema_version = "1.4"
 artifacts = []
 
 [task]
-name = "hep-cce/frnn-exact-optimization"
+name = "hep-agent-bench/frnn-exact-optimization"
 version = "0.1.0"
 description = "Speed up exact fixed-radius nearest-neighbor edge building (libFRNN, CUDA) on a real tracking event without changing its results."
 keywords = ["hep", "cuda", "performance", "gnn-tracking"]
@@ -13,15 +13,23 @@ name = "Xiangyang Ju"
 upstream_repository = "https://github.com/xju2/libFRNN"
 upstream_commit = "5ce9f21e2a2f12edfc5734fdd31973098a2f8d6d"
 base_environment = "https://github.com/xju2/agent-env-frnn"
+# hep-agent-bench-spec fields (task-format.md)
+hep_agent_bench_spec = "0.1"
+score = "log-gain-vs-expert"
+gain = "sum of baseline p50 / sum of agent p50, over the timed held-out events"
+gate = "exact edge-set equality on all 50 held-out events"
+hardware = "1 NVIDIA GPU, sm_75 or sm_86"
+canary = "7053dfb6-bb61-4599-8e65-510d4d55a0bb"
 
 [verifier]
-# Builds baseline, expert (v1.1.0) and agent, then times all three on the held-out event.
+# Builds baseline, expert (v1.1.0) and agent, checks the agent on all held-out events, then times all three on the timed subset.
 timeout_sec = 3600.0
 environment_mode = "shared"
 collect = []
 
 [verifier.env]
 TIMED_ITERATIONS = "10"
+HEPBENCH_TOOLS = "git+https://github.com/hep-cce2/hep-agent-bench-tools@v0.1.0"
 
 [agent]
 timeout_sec = 18000.0
