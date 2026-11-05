@@ -17,7 +17,8 @@ fail() {
 }
 
 # Grader helpers (hepbench), installed fresh here so nothing the agent left behind is imported.
-pip install --quiet --no-deps --target "$WORK/tools" "${HEPBENCH_TOOLS:?}" > "$LOGS/build-tools.log" 2>&1 \
+# --no-build-isolation: the image's pip 22.0.2 builds an empty UNKNOWN package in an isolated build.
+pip install --quiet --no-deps --no-build-isolation --target "$WORK/tools" "${HEPBENCH_TOOLS:?}" > "$LOGS/build-tools.log" 2>&1 \
     || fail "could not install hep-agent-bench-tools (see build-tools.log)"
 export PYTHONPATH="$WORK/tools"
 
