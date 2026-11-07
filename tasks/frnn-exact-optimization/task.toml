@@ -1,5 +1,6 @@
 schema_version = "1.4"
-artifacts = []
+# The agent's final tree, with its .git, so `git diff` shows the changes; data/ and build/ are large and regenerable.
+artifacts = [{ source = "/workspace/libFRNN", exclude = ["data", "build"] }]
 
 [task]
 name = "hep-agent-bench/frnn-exact-optimization"
