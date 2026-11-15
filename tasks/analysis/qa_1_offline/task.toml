@@ -1,0 +1,52 @@
+schema_version = "1.4"
+artifacts = [{ source = "/workspace", exclude = ["data"] }]
+
+[task]
+name = "hep-agent-bench/analysis-qa-1-offline"
+version = "0.1.0"
+description = "Offline IRIS-HEP LLM question q1: read an ATLAS Open Data PHYSLITE file with uproot and plot ETmiss, graded on a held-out file."
+keywords = ["hep", "analysis", "uproot", "awkward", "atlas-open-data"]
+[[task.authors]]
+name = "Gordon Watts"
+[[task.authors]]
+name = "Xiangyang Ju"
+
+[metadata]
+upstream_repository = "https://github.com/gordonwatts/iris-hep-llm-performance"
+upstream_commit = "edb61b9f524ab62c1be1ae7d09b262e95658a4f2"
+upstream_question = "iris-hep-llm-questions.yaml#q1"
+upstream_license = "BSD-3-Clause (see LICENSE-iris-hep-llm-performance)"
+# CERN Open Data record 80014 (CC0), JZ2 = DSID 364702; see README for the two files.
+data_source = "https://opendata.cern.ch/record/80014"
+skills_repository = "https://github.com/iris-hep/marketplace"
+skills_commit = "288a2fd6859bb69975d9f8ea86da135a0857c892"
+# hep-agent-bench-spec fields (task-format.md)
+hep_agent_bench_spec = "0.1"
+# Not in spec v0.1, which only defines log-gain-vs-expert: a question-answer task has no gain.
+score = "pass-fail"
+gain = "none"
+gate = "on the held-out file, both METRIC values match the grader's own computation within 1e-4 (relative)"
+hardware = "CPU; no network needed for grading"
+canary = "7053dfb6-bb61-4599-8e65-510d4d55a0bb"
+
+[verifier]
+timeout_sec = 1200.0
+environment_mode = "shared"
+
+[verifier.env]
+SCRIPT_TIMEOUT_SEC = "900"
+
+[agent]
+timeout_sec = 3600.0
+
+[environment]
+# Public so installed agents can reach their model API; the task itself needs no network.
+network_mode = "public"
+build_timeout_sec = 1800.0
+os = "linux"
+skills_dir = "/opt/iris-hep-marketplace/iris-hep/skills"
+mcp_servers = []
+
+[environment.env]
+
+[solution.env]

@@ -78,3 +78,31 @@ The question, prompt and reference values come from iris-hep-llm-performance und
 
 - The reference values are public in the upstream repository, and the network is open (the agent needs ServiceX), so an agent could look them up and hard-code the `METRIC:` line. The grader re-runs the script and requires a plot, but does not check that the numbers came from the data.
 - Grading depends on a live ServiceX endpoint and the agent's ServiceX token; the verifier shares the agent's container.
+
+## tasks/analysis/qa_1_offline
+
+The same question as `qa_1`, without ServiceX or credentials: the agent reads a local ATLAS Open Data PHYSLITE file with uproot. The script takes the file as its argument and is graded on a different, held-out file of the same dataset.
+
+**ETmiss definition.** Upstream's ServiceX query `MissingET().First()` returns the first term of `MET_Core_AnalysisMET`, which is the SoftClusCore soft term and not a full ETmiss rebuilt with METMaker. Its mean on these files (16.42–16.52 GeV) matches the upstream reference, 16.451 GeV. The instruction names this term explicitly, so the task has one right answer.
+
+**Scoring.** Pass/fail. The grader runs `python3 script.py <held-out file>` in an empty directory. The script must write `plot_1.png` and print one `METRIC:` line. Both numbers must match the grader's own computation on the held-out file within 1e-4 (relative). The development and held-out means differ by 0.6%, so a hard-coded development answer fails. The analysis stack and `hepbench` are baked into the image, so grading needs no network.
+
+### Data (CERN Open Data record [80014](https://opendata.cern.ch/record/80014), CC0; Pythia8 dijet JZ2, DSID 364702; not committed)
+
+```bash
+URL=https://eospublic.cern.ch//eos/opendata/atlas/rucio/mc20_13TeV
+# development file, copied into the image at /workspace/data/ (1.16 GB)
+curl -fL -o tasks/analysis/qa_1_offline/environment/data/DAOD_PHYSLITE.38191877._000140.pool.root.1 \
+     $URL/DAOD_PHYSLITE.38191877._000140.pool.root.1
+# held-out file, seen only by the grader (1.17 GB)
+curl -fL -o tasks/analysis/qa_1_offline/tests/data/DAOD_PHYSLITE.38191877._000142.pool.root.1 \
+     $URL/DAOD_PHYSLITE.38191877._000142.pool.root.1
+harbor run -p tasks/analysis/qa_1_offline -a oracle
+```
+
+The checksums (adler32) are `6a9c9561` for `._000140` and `4d48314a` for `._000142`; both files have 120,000 events.
+
+### Known limitations
+
+- The held-out file is public on CERN Open Data. An agent with network access could find it, but it would still have to compute the answer, since no reference values are stored.
+- The network stays public so installed agents can reach their model API. The verifier shares the agent's container.
