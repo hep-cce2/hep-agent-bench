@@ -1,0 +1,7 @@
+# ServiceX credentials: copy your servicex.yaml to environment/servicex.yaml (git-ignored).
+# Mounted, not copied into the image, so the token never lands in an image layer. The client
+# falls back to ~/servicex.yaml when none is found above the working directory.
+services:
+  main:
+    volumes:
+      - ./servicex.yaml:/root/servicex.yaml:ro

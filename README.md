@@ -54,3 +54,27 @@ FRNN_GPU=1 harbor run -p tasks/frnn-exact-optimization -a terminus-2 \
 - The grader installs `hepbench` at grading time from `HEPBENCH_TOOLS` (a pinned git tag, see `task.toml`), so the verifier needs network access to GitHub, or point `HEPBENCH_TOOLS` at a local wheel.
 - The network is public so installed agents can reach their model API; an agent could in principle fetch later libFRNN commits. Restrict `network_mode` / `allowed_hosts` for leaderboard runs.
 - The held-out events must stay private: an agent with network access that could download them could look up stored answers by input.
+
+## tasks/analysis/qa_1
+
+Question q1 of the IRIS-HEP LLM performance suite ([gordonwatts/iris-hep-llm-performance](https://github.com/gordonwatts/iris-hep-llm-performance), `iris-hep-llm-questions.yaml`, commit `edb61b9`): write a single uv-runnable `script.py` that fetches one file of an ATLAS Open Data PHYSLITE dataset through ServiceX, plots ETmiss and prints a `METRIC:` line. The prompt is the upstream template with q1 filled in, plus where to work and how it is graded. The agent gets the pinned [IRIS-HEP skills](https://github.com/iris-hep/marketplace) (`skills_dir`), as the upstream runs do.
+
+**Scoring.** Pass/fail. The grader re-runs `/workspace/script.py` with `uv run --script` in an empty directory; it must write `plot_1.png` and print exactly one `METRIC: avg_entries_per_event=<N> mean=<M>` line with both numbers within 2% (relative) of the upstream reference (1.0 and 16.451025). Spec v0.1 only defines `log-gain-vs-expert`, so this task declares `score = "pass-fail"`.
+
+### Setup
+
+```bash
+cp ~/servicex.yaml tasks/analysis/qa_1/environment/servicex.yaml   # git-ignored; mounted read-only at /root/servicex.yaml
+harbor run -p tasks/analysis/qa_1 -a oracle
+```
+
+Without that file Docker creates an empty directory in its place and ServiceX fails to authenticate. The oracle (`solution/script.py`) is a short reference script.
+
+### Licence
+
+The question, prompt and reference values come from iris-hep-llm-performance under the BSD 3-Clause License, copyright 2026 Gordon Watts; its licence is kept in `tasks/analysis/qa_1/LICENSE-iris-hep-llm-performance`. The IRIS-HEP skills (BSD 3-Clause, copyright 2025 IRIS-HEP) are cloned into the image at build time, not vendored here.
+
+### Known limitations
+
+- The reference values are public in the upstream repository, and the network is open (the agent needs ServiceX), so an agent could look them up and hard-code the `METRIC:` line. The grader re-runs the script and requires a plot, but does not check that the numbers came from the data.
+- Grading depends on a live ServiceX endpoint and the agent's ServiceX token; the verifier shares the agent's container.
