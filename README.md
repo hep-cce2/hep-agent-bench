@@ -55,37 +55,13 @@ FRNN_GPU=1 harbor run -p tasks/frnn-exact-optimization -a terminus-2 \
 - The network is public so installed agents can reach their model API; an agent could in principle fetch later libFRNN commits. Restrict `network_mode` / `allowed_hosts` for leaderboard runs.
 - The held-out events must stay private: an agent with network access that could download them could look up stored answers by input.
 
-## tasks/analysis/qa_1
-
-Question q1 of the IRIS-HEP LLM performance suite ([gordonwatts/iris-hep-llm-performance](https://github.com/gordonwatts/iris-hep-llm-performance), `iris-hep-llm-questions.yaml`, commit `edb61b9`): write a single uv-runnable `script.py` that fetches one file of an ATLAS Open Data PHYSLITE dataset through ServiceX, plots ETmiss and prints a `METRIC:` line. The prompt is the upstream template with q1 filled in, plus where to work and how it is graded. The agent gets the pinned [IRIS-HEP skills](https://github.com/iris-hep/marketplace) (`skills_dir`), as the upstream runs do.
-
-**Scoring.** Pass/fail. The grader re-runs `/workspace/script.py` with `uv run --script` in an empty directory; it must write `plot_1.png` and print exactly one `METRIC: avg_entries_per_event=<N> mean=<M>` line with both numbers within 2% (relative) of the upstream reference (1.0 and 16.451025). Spec v0.1 only defines `log-gain-vs-expert`, so this task declares `score = "pass-fail"`.
-
-### Setup
-
-```bash
-cp ~/servicex.yaml tasks/analysis/qa_1/environment/servicex.yaml   # git-ignored; mounted read-only at /root/servicex.yaml
-harbor run -p tasks/analysis/qa_1 -a oracle
-```
-
-Without that file Docker creates an empty directory in its place and ServiceX fails to authenticate. The oracle (`solution/script.py`) is a short reference script.
-
-### Licence
-
-The question, prompt and reference values come from iris-hep-llm-performance under the BSD 3-Clause License, copyright 2026 Gordon Watts; its licence is kept in `tasks/analysis/qa_1/LICENSE-iris-hep-llm-performance`. The IRIS-HEP skills (BSD 3-Clause, copyright 2025 IRIS-HEP) are cloned into the image at build time, not vendored here.
-
-### Known limitations
-
-- The reference values are public in the upstream repository, and the network is open (the agent needs ServiceX), so an agent could look them up and hard-code the `METRIC:` line. The grader re-runs the script and requires a plot, but does not check that the numbers came from the data.
-- Grading depends on a live ServiceX endpoint and the agent's ServiceX token; the verifier shares the agent's container.
-
 ## tasks/analysis/qa_1_offline
 
-The same question as `qa_1`, without ServiceX or credentials: the agent reads a local ATLAS Open Data PHYSLITE file with uproot. The script takes the file as its argument and is graded on a different, held-out file of the same dataset.
+Question q1 of the IRIS-HEP LLM performance suite ([gordonwatts/iris-hep-llm-performance](https://github.com/gordonwatts/iris-hep-llm-performance), `iris-hep-llm-questions.yaml`, commit `edb61b9`), plot ETmiss, made to run offline. Upstream fetches the data through ServiceX; here the agent reads a local ATLAS Open Data PHYSLITE file with uproot, so no credentials are needed. The prompt follows the upstream template, and the agent gets the pinned [IRIS-HEP skills](https://github.com/iris-hep/marketplace) (`skills_dir`). The script takes the file as its argument and is graded on a different, held-out file of the same dataset.
 
 **ETmiss definition.** Upstream's ServiceX query `MissingET().First()` returns the first term of `MET_Core_AnalysisMET`, which is the SoftClusCore soft term and not a full ETmiss rebuilt with METMaker. Its mean on these files (16.42–16.52 GeV) matches the upstream reference, 16.451 GeV. The instruction names this term explicitly, so the task has one right answer.
 
-**Scoring.** Pass/fail. The grader runs `python3 script.py <held-out file>` in an empty directory. The script must write `plot_1.png` and print one `METRIC:` line. Both numbers must match the grader's own computation on the held-out file within 1e-4 (relative). The development and held-out means differ by 0.6%, so a hard-coded development answer fails. The analysis stack and `hepbench` are baked into the image, so grading needs no network.
+**Scoring.** Pass/fail. The grader runs `python3 script.py <held-out file>` in an empty directory. The script must write `plot_1.png` and print one `METRIC:` line. Both numbers must match the grader's own computation on the held-out file within 1e-4 (relative). The development and held-out means differ by 0.6%, so a hard-coded development answer fails. The analysis stack and `hepbench` are baked into the image, so grading needs no network. Spec v0.1 only defines `log-gain-vs-expert`, so this task declares `score = "pass-fail"`.
 
 ### Data (CERN Open Data record [80014](https://opendata.cern.ch/record/80014), CC0; Pythia8 dijet JZ2, DSID 364702; not committed)
 
@@ -101,6 +77,10 @@ harbor run -p tasks/analysis/qa_1_offline -a oracle
 ```
 
 The checksums (adler32) are `6a9c9561` for `._000140` and `4d48314a` for `._000142`; both files have 120,000 events.
+
+### Licence
+
+The question, prompt and ETmiss definition come from iris-hep-llm-performance under the BSD 3-Clause License, copyright 2026 Gordon Watts; its licence is kept in `tasks/analysis/qa_1_offline/LICENSE-iris-hep-llm-performance`. The IRIS-HEP skills (BSD 3-Clause, copyright 2025 IRIS-HEP) are cloned into the image at build time, not vendored here. The data files are CC0.
 
 ### Known limitations
 
