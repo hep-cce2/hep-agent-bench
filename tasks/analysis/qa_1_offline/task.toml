@@ -1,0 +1,50 @@
+schema_version = "1.4"
+artifacts = [{ source = "/workspace", exclude = ["data"] }]
+
+[task]
+name = "hep-agent-bench/analysis-qa-1-offline"
+version = "0.1.0"
+description = "The 21 IRIS-HEP LLM analysis questions, offline: uproot scripts on ATLAS Open Data PHYSLITE, graded on held-out files."
+keywords = ["hep", "analysis", "uproot", "awkward", "atlas-open-data"]
+[[task.authors]]
+name = "Gordon Watts"
+[[task.authors]]
+name = "Xiangyang Ju"
+
+[metadata]
+upstream_repository = "https://github.com/gordonwatts/iris-hep-llm-performance"
+upstream_commit = "edb61b9f524ab62c1be1ae7d09b262e95658a4f2"
+upstream_questions = "iris-hep-llm-questions.yaml, q1-q21"
+upstream_license = "BSD-3-Clause (see LICENSE-iris-hep-llm-performance)"
+# CERN Open Data 2024 research release (CC0); records 80010, 80011, 80014, 80017. Files listed in the README.
+data_source = "https://opendata.cern.ch/record/80020"
+skills_repository = "https://github.com/iris-hep/marketplace"
+skills_commit = "288a2fd6859bb69975d9f8ea86da135a0857c892"
+# hep-agent-bench-rubric fields (task-format.md)
+hep_agent_bench_rubric = "0.2"
+score = "fraction-passed"
+gate = "per question: on held-out files, every METRIC value matches the grader's reference within 1e-5 relative (q19: exact HLT_j460 count)"
+hardware = "CPU; no network needed for grading"
+canary = "7053dfb6-bb61-4599-8e65-510d4d55a0bb"
+
+[verifier]
+timeout_sec = 7200.0
+environment_mode = "shared"
+
+[verifier.env]
+SCRIPT_TIMEOUT_SEC = "600"
+
+[agent]
+timeout_sec = 14400.0
+
+[environment]
+# Public so installed agents can reach their model API; the task itself needs no network.
+network_mode = "public"
+build_timeout_sec = 1800.0
+os = "linux"
+skills_dir = "/opt/iris-hep-marketplace/iris-hep/skills"
+mcp_servers = []
+
+[environment.env]
+
+[solution.env]
