@@ -63,11 +63,13 @@ All 21 questions of the IRIS-HEP LLM performance suite ([gordonwatts/iris-hep-ll
 
 | Choice | Definition | Upstream check |
 |---|---|---|
+| Arithmetic | float64; PHYSLITE stores float32, and float32 trijet masses pick different combinations in q6 | — |
 | ETmiss | First `MET_Core_AnalysisMET` term (SoftClusCore), which is what `MissingET().First()` returns; not a METMaker-rebuilt ETmiss | q5, q8 exact; q1, q4 within 0.6% (different JZ2 file) |
 | b-tagging discriminant | DL1dv01, f_c = 0.018 | q6 exact, q17 1% |
 | q5 denominator | All events, not selected events | exact |
 | q18 η cut | \|η\| < 2.4 (upstream text says η < 2.4, but its value needs \|η\|) | 0.3% |
 | q16 tt̄ mass | Lepton + neutrino (ETmiss, p_z = 0) + 4 leading jets | 0.05% |
+| q20 variable | `numberOfPrecisionLayers` (`numberOfGoodPrecisionLayers` also exists) | — |
 | q21 valid link | `m_persKey != 0` | 0.04% |
 
 The other questions use the literal reading of upstream's text. Some upstream values differ by more than 1% because upstream used different files or settings: q12 (avg +3.6%), q13 (+1.5%) and q15 (−6%; the JZ2/JZ3 files differ in event count). **q19:** upstream's `HLT_j460=902` cannot come from one file. File `37861619._000001` gives 191, which agrees with 190 events having an offline leading jet above 460 GeV.
