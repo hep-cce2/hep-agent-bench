@@ -8,7 +8,7 @@ RUN pip install --no-cache-dir uproot==5.7.7 awkward==2.15.0 numpy==2.5.4 hist==
 
 # Grader helpers, installed at build time so grading needs no network; kept off the default path.
 RUN pip install --no-cache-dir --no-deps --target /opt/hepbench \
-    git+https://github.com/hep-cce2/hep-agent-bench-tools@21bdd68b3748721cd356f9169f23bfb4038248f2  # v0.1.0
+    git+https://github.com/hep-cce2/hep-agent-bench-tools@cc7e1de0a18f71e8b869eee6bacc9ca84a7e64c2  # v0.2.0
 
 # IRIS-HEP skills used by the upstream benchmark (iris-hep@iris-hep-tools, BSD-3-Clause), pinned.
 RUN git clone https://github.com/iris-hep/marketplace.git /opt/iris-hep-marketplace \

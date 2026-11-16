@@ -1,6 +1,6 @@
 # hep-agent-bench
 
-Benchmark tasks for AI agents, built from real HEP software problems and curated by the HEP-CCE Scaling ML group. Each task is a [Harbor](https://harborframework.com) task under `tasks/` (`instruction.md`, `task.toml`, `environment/`, `tests/`, `solution/`) that follows the [hep-agent-bench spec](https://github.com/hep-cce2/hep-agent-bench-spec). Graders use the [`hepbench`](https://github.com/hep-cce2/hep-agent-bench-tools) helpers.
+Benchmark tasks for AI agents, built from real HEP software problems and curated by the HEP-CCE Scaling ML group. Each task is a [Harbor](https://harborframework.com) task under `tasks/` (`instruction.md`, `task.toml`, `environment/`, `tests/`, `solution/`) that follows the [hep-agent-bench rubric](https://github.com/hep-cce2/hep-agent-bench-rubric). Graders use the [`hepbench`](https://github.com/hep-cce2/hep-agent-bench-tools) helpers.
 
 New tasks are welcome: see [CONTRIBUTING.md](CONTRIBUTING.md).
 
@@ -51,7 +51,7 @@ FRNN_GPU=1 harbor run -p tasks/frnn-exact-optimization -a terminus-2 \
 ### Known limitations
 
 - The verifier shares the agent's container and the agent runs as root. The grader checks the baseline source against its pinned manifest, but a determined agent could still tamper with the toolchain. Use `verifier.environment_mode = "separate"` before treating scores as adversarially robust.
-- The grader installs `hepbench` at grading time from `HEPBENCH_TOOLS` (a pinned git tag, see `task.toml`), so the verifier needs network access to GitHub, or point `HEPBENCH_TOOLS` at a local wheel.
+- The grader installs `hepbench` at grading time from `HEPBENCH_TOOLS` (a pinned commit, see `task.toml`), so the verifier needs network access to GitHub, or point `HEPBENCH_TOOLS` at a local wheel.
 - The network is public so installed agents can reach their model API; an agent could in principle fetch later libFRNN commits. Restrict `network_mode` / `allowed_hosts` for leaderboard runs.
 - The held-out events must stay private: an agent with network access that could download them could look up stored answers by input.
 
@@ -79,7 +79,7 @@ The other questions use the literal reading of upstream's text. Some upstream va
 - computes the reference with `tests/reference.py` on the same files;
 - requires the plot(s) and the same number of `METRIC:` lines, with every value within 1e-5 relative (q19: `triggers.md` and the exact `HLT_j460` count).
 
-Every development and held-out answer differs by more than the tolerance (the smallest gap is q9, 6e-5), so hard-coding development results fails. The oracle turns `solution/reference.py`, an identical copy of `tests/reference.py` that must be kept in sync, into 21 stand-alone scripts. Spec v0.1 only defines `log-gain-vs-expert`, so this task declares `score = "fraction-passed"`.
+Every development and held-out answer differs by more than the tolerance (the smallest gap is q9, 6e-5), so hard-coding development results fails. The oracle turns `solution/reference.py`, an identical copy of `tests/reference.py` (CI checks they match), into 21 stand-alone scripts. The score is the rubric's `fraction-passed`.
 
 ### Data (CERN Open Data 2024 research release, CC0; not committed)
 

@@ -20,11 +20,9 @@ upstream_license = "BSD-3-Clause (see LICENSE-iris-hep-llm-performance)"
 data_source = "https://opendata.cern.ch/record/80020"
 skills_repository = "https://github.com/iris-hep/marketplace"
 skills_commit = "288a2fd6859bb69975d9f8ea86da135a0857c892"
-# hep-agent-bench-spec fields (task-format.md)
-hep_agent_bench_spec = "0.1"
-# Not in spec v0.1, which only defines log-gain-vs-expert: a question-answer task has no gain.
+# hep-agent-bench-rubric fields (task-format.md)
+hep_agent_bench_rubric = "0.2"
 score = "fraction-passed"
-gain = "none"
 gate = "per question: on held-out files, every METRIC value matches the grader's reference within 1e-5 relative (q19: exact HLT_j460 count)"
 hardware = "CPU; no network needed for grading"
 canary = "7053dfb6-bb61-4599-8e65-510d4d55a0bb"

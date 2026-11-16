@@ -13,8 +13,8 @@ name = "Xiangyang Ju"
 upstream_repository = "https://github.com/xju2/libFRNN"
 upstream_commit = "5ce9f21e2a2f12edfc5734fdd31973098a2f8d6d"
 base_environment = "https://github.com/xju2/agent-env-frnn"
-# hep-agent-bench-spec fields (task-format.md)
-hep_agent_bench_spec = "0.1"
+# hep-agent-bench-rubric fields (task-format.md)
+hep_agent_bench_rubric = "0.2"
 score = "log-gain-vs-expert"
 gain = "sum of baseline p50 / sum of agent p50, over the timed held-out events"
 gate = "exact edge-set equality on all 50 held-out events"
@@ -29,7 +29,7 @@ collect = []
 
 [verifier.env]
 TIMED_ITERATIONS = "10"
-HEPBENCH_TOOLS = "git+https://github.com/hep-cce2/hep-agent-bench-tools@v0.1.0"
+HEPBENCH_TOOLS = "git+https://github.com/hep-cce2/hep-agent-bench-tools@cc7e1de0a18f71e8b869eee6bacc9ca84a7e64c2"  # v0.2.0
 
 [agent]
 timeout_sec = 18000.0
