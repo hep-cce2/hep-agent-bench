@@ -29,7 +29,7 @@ collect = []
 
 [verifier.env]
 TIMED_ITERATIONS = "10"
-HEPBENCH_TOOLS = "git+https://github.com/hep-cce2/hep-agent-bench-tools@cc7e1de0a18f71e8b869eee6bacc9ca84a7e64c2"  # v0.2.0
+HEPBENCH_TOOLS = "git+https://github.com/hep-cce2/hep-agent-bench-tools@612df7fe2d863b77e2fbf1382ad223f07028c20c"  # v0.2.0
 
 [agent]
 timeout_sec = 18000.0
