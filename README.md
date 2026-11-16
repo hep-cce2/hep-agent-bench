@@ -57,32 +57,56 @@ FRNN_GPU=1 harbor run -p tasks/frnn-exact-optimization -a terminus-2 \
 
 ## tasks/analysis/qa_1_offline
 
-Question q1 of the IRIS-HEP LLM performance suite ([gordonwatts/iris-hep-llm-performance](https://github.com/gordonwatts/iris-hep-llm-performance), `iris-hep-llm-questions.yaml`, commit `edb61b9`), plot ETmiss, made to run offline. Upstream fetches the data through ServiceX; here the agent reads a local ATLAS Open Data PHYSLITE file with uproot, so no credentials are needed. The prompt follows the upstream template, and the agent gets the pinned [IRIS-HEP skills](https://github.com/iris-hep/marketplace) (`skills_dir`). The script takes the file as its argument and is graded on a different, held-out file of the same dataset.
+All 21 questions of the IRIS-HEP LLM performance suite ([gordonwatts/iris-hep-llm-performance](https://github.com/gordonwatts/iris-hep-llm-performance), `iris-hep-llm-questions.yaml`, commit `edb61b9`), made to run offline. Upstream fetches data through ServiceX; here each script reads local ATLAS Open Data PHYSLITE files with uproot, so no credentials are needed. The prompt follows the upstream template. The agent writes `/workspace/q<n>/script.py` for each question and gets the pinned [IRIS-HEP skills](https://github.com/iris-hep/marketplace) (`skills_dir`).
 
-**ETmiss definition.** Upstream's ServiceX query `MissingET().First()` returns the first term of `MET_Core_AnalysisMET`, which is the SoftClusCore soft term and not a full ETmiss rebuilt with METMaker. Its mean on these files (16.42–16.52 GeV) matches the upstream reference, 16.451 GeV. The instruction names this term explicitly, so the task has one right answer.
+**Definitions.** Upstream's questions leave some choices open, and its reference values come from ServiceX/func_adl defaults. The instruction states one definition for each such choice. Each was chosen by reproducing upstream's numbers on the file upstream most likely used (`tests/reference.py`):
 
-**Scoring.** Pass/fail. The grader runs `python3 script.py <held-out file>` in an empty directory. The script must write `plot_1.png` and print one `METRIC:` line. Both numbers must match the grader's own computation on the held-out file within 1e-4 (relative). The development and held-out means differ by 0.6%, so a hard-coded development answer fails. The analysis stack and `hepbench` are baked into the image, so grading needs no network. Spec v0.1 only defines `log-gain-vs-expert`, so this task declares `score = "pass-fail"`.
+| Choice | Definition | Upstream check |
+|---|---|---|
+| ETmiss | First `MET_Core_AnalysisMET` term (SoftClusCore), which is what `MissingET().First()` returns; not a METMaker-rebuilt ETmiss | q5, q8 exact; q1, q4 within 0.6% (different JZ2 file) |
+| b-tagging discriminant | DL1dv01, f_c = 0.018 | q6 exact, q17 1% |
+| q5 denominator | All events, not selected events | exact |
+| q18 η cut | \|η\| < 2.4 (upstream text says η < 2.4, but its value needs \|η\|) | 0.3% |
+| q16 tt̄ mass | Lepton + neutrino (ETmiss, p_z = 0) + 4 leading jets | 0.05% |
+| q21 valid link | `m_persKey != 0` | 0.04% |
 
-### Data (CERN Open Data record [80014](https://opendata.cern.ch/record/80014), CC0; Pythia8 dijet JZ2, DSID 364702; not committed)
+The other questions use the literal reading of upstream's text. Some upstream values differ by more than 1% because upstream used different files or settings: q12 (avg +3.6%), q13 (+1.5%) and q15 (−6%; the JZ2/JZ3 files differ in event count). **q19:** upstream's `HLT_j460=902` cannot come from one file. File `37861619._000001` gives 191, which agrees with 190 events having an offline leading jet above 460 GeV.
+
+**Scoring.** Reward = fraction of the 21 questions passed. For each question the grader:
+- copies the script to an empty directory and runs it on held-out files of the same dataset;
+- computes the reference with `tests/reference.py` on the same files;
+- requires the plot(s) and the same number of `METRIC:` lines, with every value within 1e-5 relative (q19: `triggers.md` and the exact `HLT_j460` count).
+
+Every development and held-out answer differs by more than the tolerance (the smallest gap is q9, 6e-5), so hard-coding development results fails. The oracle turns `solution/reference.py`, an identical copy of `tests/reference.py` that must be kept in sync, into 21 stand-alone scripts. Spec v0.1 only defines `log-gain-vs-expert`, so this task declares `score = "fraction-passed"`.
+
+### Data (CERN Open Data 2024 research release, CC0; not committed)
+
+| DSID | Questions | Record | Development file → `environment/data/` | Held-out file → `tests/data/` |
+|---|---|---|---|---|
+| 364702 dijet JZ2 | q1–4, 9, 11, 14, 15 | [80014](https://opendata.cern.ch/record/80014) | `38191877._000140` (1.16 GB) | `38191877._000142` (1.17 GB) |
+| 364703 dijet JZ3 | q15 | 80014 | `38191774._000013` (1.12 GB) | `38191774._000012` (1.12 GB) |
+| 410471 ttbar all-had | q6, 7, 10, 17–19, 21 | [80017](https://opendata.cern.ch/record/80017) | `37861619._000001` (0.46 GB) | `37861619._000245` (0.46 GB) |
+| 700325 Z→μμ | q5, 12, 13, 20 | [80010](https://opendata.cern.ch/record/80010) | `37621409._000001` (0.58 GB) | `37621417._000006` (0.23 GB) |
+| 700588 lllvjj | q8 | 80010 | `37110891._000001` (0.61 GB) | none: only one public file |
+| 301333 Z′→tt | q16 | [80011](https://opendata.cern.ch/record/80011) | `38191516._000001` (0.96 GB) | none: only one public file |
 
 ```bash
+cd tasks/analysis/qa_1_offline
 URL=https://eospublic.cern.ch//eos/opendata/atlas/rucio/mc20_13TeV
-# development file, copied into the image at /workspace/data/ (1.16 GB)
-curl -fL -o tasks/analysis/qa_1_offline/environment/data/DAOD_PHYSLITE.38191877._000140.pool.root.1 \
-     $URL/DAOD_PHYSLITE.38191877._000140.pool.root.1
-# held-out file, seen only by the grader (1.17 GB)
-curl -fL -o tasks/analysis/qa_1_offline/tests/data/DAOD_PHYSLITE.38191877._000142.pool.root.1 \
-     $URL/DAOD_PHYSLITE.38191877._000142.pool.root.1
+get() { curl -fL -o "$1/DAOD_PHYSLITE.$2.pool.root.1" "$URL/DAOD_PHYSLITE.$2.pool.root.1"; }
+for f in 38191877._000140 38191774._000013 37861619._000001 37621409._000001 37110891._000001 38191516._000001; do get environment/data $f; done
+for f in 38191877._000142 38191774._000012 37861619._000245 37621417._000006; do get tests/data $f; done
 harbor run -p tasks/analysis/qa_1_offline -a oracle
 ```
 
-The checksums (adler32) are `6a9c9561` for `._000140` and `4d48314a` for `._000142`; both files have 120,000 events.
+The image holds 4.9 GB of development files, and `tests/data` holds 3.0 GB. `atlasopenmagic` (`get_urls('<DSID>')`, release `2024r-pp`) lists every file of a dataset.
 
 ### Licence
 
-The question, prompt and ETmiss definition come from iris-hep-llm-performance under the BSD 3-Clause License, copyright 2026 Gordon Watts; its licence is kept in `tasks/analysis/qa_1_offline/LICENSE-iris-hep-llm-performance`. The IRIS-HEP skills (BSD 3-Clause, copyright 2025 IRIS-HEP) are cloned into the image at build time, not vendored here. The data files are CC0.
+The questions, prompt template and upstream reference values come from iris-hep-llm-performance under the BSD 3-Clause License, copyright 2026 Gordon Watts; its licence is kept in `tasks/analysis/qa_1_offline/LICENSE-iris-hep-llm-performance`. The IRIS-HEP skills (BSD 3-Clause, copyright 2025 IRIS-HEP) are cloned into the image at build time, not vendored here. The data files are CC0.
 
 ### Known limitations
 
-- The held-out file is public on CERN Open Data. An agent with network access could find it, but it would still have to compute the answer, since no reference values are stored.
+- q8 and q16 are graded on their development files, because 700588 and 301333 have one public file each. The grader hash-checks those files, but a script could hard-code those two answers.
+- The held-out files are public on CERN Open Data. An agent with network access could find them, but it would still have to compute the answers, since no reference values are stored.
 - The network stays public so installed agents can reach their model API. The verifier shares the agent's container.
