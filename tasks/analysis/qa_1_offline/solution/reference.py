@@ -18,7 +18,10 @@ MEL, MMU = 0.000511, 0.10566  # GeV
 
 
 def tree(path, names, **kw):
-    return uproot.open(path)["CollectionTree"].arrays(names, **kw)
+    """Read branches, promoting float32 to float64 (float32 mass sums pick different combinations)."""
+    a = uproot.open(path)["CollectionTree"].arrays(names, **kw)
+    return ak.zip({k: ak.values_astype(a[k], np.float64) if "float32" in str(ak.type(a[k])) else a[k]
+                   for k in a.fields}, depth_limit=1)
 
 
 def jets(a):

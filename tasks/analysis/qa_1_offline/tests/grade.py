@@ -51,9 +51,8 @@ def judge(n: int, stdout: str, workdir: Path, expected) -> str:
         if len(got) != 1:
             return f"expected one HLT_j460= line, got {len(got)}"
         return "" if int(got[0]) == expected["HLT_j460"] else f"HLT_j460={got[0]}"
-    for i in range(1, len(expected) + 1):
-        if not (workdir / f"plot_{i}.png").is_file():
-            return f"no plot_{i}.png"
+    if len(list(workdir.glob("*.png"))) < len(expected):
+        return f"expected {len(expected)} PNG plot(s)"
     found = METRIC.findall(stdout)
     if len(found) != len(expected):
         return f"expected {len(expected)} METRIC line(s), got {len(found)}"
@@ -98,7 +97,7 @@ def self_test():
     assert judge(9, "METRIC: avg_entries_per_event=1 mean=5.9619", w, e)  # dev answer, 6e-5 off
     assert judge(9, "METRIC: avg_entries_per_event=1 mean=5.9615\n" * 2, w, e)
     assert judge(9, "METRIC: avg_entries_per_event=nan mean=5.9615", w, e)
-    assert judge(6, "METRIC: avg_entries_per_event=1 mean=5.9615", w, e + e) == "no plot_2.png"
+    assert judge(6, "METRIC: avg_entries_per_event=1 mean=5.9615", w, e + e) == "expected 2 PNG plot(s)"
     assert judge(19, "HLT_j460=183", w, {"HLT_j460": 183}) == "no triggers.md"
     (w / "triggers.md").write_text("t")
     assert judge(19, "x\nHLT_j460=183\n", w, {"HLT_j460": 183}) == ""

@@ -1,6 +1,6 @@
 There are 21 analysis questions below. For each question `<n>`, write a stand-alone Python file `/workspace/q<n>/script.py` that does what the question asks.
 
-Every script takes the input PHYSLITE file(s) as command-line arguments: one file, or two for q15. Run it as `python3 script.py FILE [FILE2]`. It must save its plots as `plot_<n>.png` in the current directory; put all of its Python code in that single file. You must run each script on its development file(s) and produce its plot(s) before declaring success.
+Every script takes the input PHYSLITE file(s) as command-line arguments: one file, or two for q15. Run it as `python3 script.py FILE [FILE2]`. It must save its plot(s) as PNG files in the current directory (any names, e.g. `plot_<n>.png`; q6 makes two); put all of its Python code in that single file. You must run each script on its development file(s) and produce its plot(s) before declaring success.
 
 For each plot, compute the unweighted mean from the raw values used to fill the histogram, and the unweighted average number of entries per event (entries divided by the number of events after all filtering, unless the question says otherwise). Immediately print exactly one line per plot, in plot order, in this format:
 METRIC: avg_entries_per_event=<N> mean=<M>
@@ -28,6 +28,7 @@ Do not use histogram APIs to compute these metrics, and do not apply weights.
 - **Jets** are `AnalysisJets`, **electrons** are `AnalysisElectrons`, **muons** are `AnalysisMuons`, and **light leptons** are electrons and muons together. Apply no selection beyond what a question asks for. Use the jets' stored mass, 0.000511 GeV for electrons and 0.10566 GeV for muons.
 - **ETmiss** is the first term of `MET_Core_AnalysisMET`. Its vector is (`mpx`, `mpy`) of that term, and ETmiss is the vector's magnitude.
 - The **b-tagging discriminant** of a jet is DL1dv01: ln(p_b / (0.018·p_c + 0.982·p_u)), using `BTagging_AntiKt4EMPFlow` `DL1dv01_pb/pc/pu`. That container is aligned one-to-one with the jets.
+- Do all arithmetic in float64: PHYSLITE stores most values as float32, so cast them on reading.
 - **ΔR** = sqrt(Δη² + Δφ²), with Δφ wrapped into [−π, π).
 - **"Events"** means all events in the input file(s), unless the question applies a selection.
 
@@ -57,11 +58,11 @@ Each question gives its dataset; the script runs on a file of that dataset.
   1. Write a markdown table to `triggers.md` and print it to stdout. Put the total number of events at the top, then one row per trigger with its name and count.
   2. Make a plot where the x-axis is the trigger name and the y-axis is the number of times it fired.
   3. Print a line `HLT_j460=<n>`, where `<n>` is the number of events in which `HLT_j460` fired. This question prints no METRIC line.
-- **q20** (700325): Plot the number of precision layers for every muon. Include muons with zero precision layers, and do not apply object or event cuts. Keep events with no muons in the event count used for avg_entries_per_event.
+- **q20** (700325): Plot the number of precision layers (`numberOfPrecisionLayers`) for every muon. Include muons with zero precision layers, and do not apply object or event cuts. Keep events with no muons in the event count used for avg_entries_per_event.
 - **q21** (410471): Plot the number of valid ghost-associated tracks (`GhostTrack`) for every jet. Count only non-null track links, since thinning can invalidate links; a null link has `m_persKey == 0`. Include jets with zero valid tracks, and do not apply object or event cuts. Keep events with no jets in the event count used for avg_entries_per_event.
 
 ## How your work is graded, after you finish
 
 - Each `/workspace/q<n>/script.py` is copied to an empty directory and run as `python3 script.py <file(s)>`. The input is a held-out file of the same dataset, different from the development file (for 700588 and 301333 the only public file, the development file, is used). Each run has a time limit of 10 minutes.
-- A question passes when the script exits successfully and writes `plot_1.png` (and `plot_2.png` for q6). Its METRIC lines must match the grader's own computation on that file: same number of lines, and every value within a relative 1e-5. For q19, `triggers.md` must exist and the `HLT_j460=<n>` count must match exactly.
+- A question passes when the script exits successfully and writes at least one PNG file per plot (two for q6). Its METRIC lines must match the grader's own computation on that file: same number of lines, and every value within a relative 1e-5. For q19, `triggers.md` must exist and the `HLT_j460=<n>` count must match exactly.
 - The reward is the fraction of the 21 questions that pass.
