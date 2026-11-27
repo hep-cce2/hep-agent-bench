@@ -4,6 +4,47 @@ Benchmark tasks for AI agents, built from real HEP software problems and curated
 
 New tasks are welcome: see [CONTRIBUTING.md](CONTRIBUTING.md).
 
+## tasks/simulation/celeritas/dune-zwires-pr2255
+
+Speed up [Celeritas](https://github.com/celeritas-project/celeritas) optical-photon transport (`celer-optical`, CUDA, ORANGE geometry) on the DUNE Z-wires geometry without changing its physics. The agent starts from Celeritas `e906a7a8b` on `develop` and gets only a general goal, not where to look. The expert result is the next commit, [celeritas#2255](https://github.com/celeritas-project/celeritas/pull/2255) ("Fix infinities and unions in bounding zone", `d048aa67c`), which fixes ORANGE bounding boxes so that the DUNE photon detectors get finite ones. The dune-perf history (celeritas-project/dune-perf, private) shows it as the single largest step on this problem at that time (355 s → 197 s on a V100).
+
+**Scoring.** The grader builds three versions of `celer-optical` with the same CMake options (`tests/build.sh`): the agent's tree, the pinned baseline, and the expert (baseline + `tests/expert.patch`, the `src/` diff of #2255). Each runs every held-out problem: 16.8 M optical photons from a held-out point in the liquid argon, with a held-out seed. Then:
+
+1. on every problem, the agent must generate all photons, and its total step count must be within `STEP_TOLERANCE` (0.2%) of the baseline's (otherwise reward 0). Baseline and expert give identical step counts for the same seed; changing the seed moves the count by about 0.035%;
+2. time = `setup` + `total` (transport) from the `celer-optical` output, summed over the problems;
+3. speedup = baseline time / agent time, and reward = `min(1, log(agent speedup) / log(expert speedup))`.
+
+On the RTX A6000 the expert gives 1.19× on the development problem (baseline 142 s, expert 119 s) and 1.20× over 4 held-out problems (262 s → 218 s), with identical step counts. The oracle scores 1.0. The gain is smaller than on a V100 because FP64 is slow on the A6000.
+
+### Setup on the GPU host
+
+```bash
+docker pull docker.io/celeritas/ci-rocky-cuda12:2024-12-29
+# Held-out problems (not committed): source positions and seeds drawn from a private seed
+python tasks/simulation/celeritas/dune-zwires-pr2255/tests/make_heldout.py <private-seed> 4
+```
+
+The development problem (`environment/bench/dev.inp.json`) and the geometry (`dune-zwires.gdml`, from dune-perf `models/`, derived from DUNE's public `dune10kt_v6_refactored_1x2x6.gdml`; its provenance is in the file header) are committed. The grader uses its own copies in `tests/`.
+
+### Run
+
+```bash
+CELER_GPU=0 harbor run -p tasks/simulation/celeritas/dune-zwires-pr2255 -a oracle
+CELER_GPU=0 harbor run -p tasks/simulation/celeritas/dune-zwires-pr2255 -a terminus-2 -m openai/<model> --ak api_base=http://<host>:<port>/v1
+```
+
+`CELER_GPU` selects the device (default 0). A trial runs 3 builds (about 1 min each on 72 cores) and 12 runs (15–140 s each on the A6000, about 12 min in total).
+
+### Known limitations
+
+- **Copying the expert.** The expert is a public, merged PR, so three things guard against copying it:
+  1. `network_mode = "no-network"`: the agent cannot reach GitHub, so it cannot fetch upstream Celeritas. terminus-2 calls the model from the host; for agents installed in the container Harbor allowlists only their inference host. The grader is offline too (hepbench v0.1.0 is vendored in `tests/hepbench`).
+  2. The image holds only the baseline tree, as one fresh commit with no upstream history, and the CI base image predates #2255.
+  3. `metrics.json` reports `expert_overlap`: the share of the expert patch's added code lines (≥ 12 characters, not comments) that also appear in the agent's `src/` changes. `suspected_copy` is set at `COPY_FLAG_THRESHOLD` (0.5) for manual review. It does not change the reward, because the oracle would fail it. This mainly catches a fix the model has memorized: #2255 was merged in Feb 2026 and may be in training data, which no sandbox can prevent.
+- The verifier shares the agent's container (as in frnn), so a root agent could tamper with the toolchain. Use `verifier.environment_mode = "separate"` for adversarial runs.
+- The gate checks photon count and total steps, not hit-level observables: `celer-optical` at this commit writes no detector scoring.
+- `CUDAARCHS=86` (A6000) is set in the image. Change it there to grade on another GPU.
+
 ## tasks/frnn-exact-optimization
 
 Speed up exact fixed-radius nearest-neighbor edge building in [libFRNN](https://github.com/xju2/libFRNN) (CUDA) on a real tracking event, without changing a single edge. Built on the pinned environment in [agent-env-frnn](https://github.com/xju2/agent-env-frnn).

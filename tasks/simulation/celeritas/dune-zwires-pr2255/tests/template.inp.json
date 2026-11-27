@@ -1,0 +1,47 @@
+{
+  "geant_setup": {
+    "absorption": true,
+    "boundary": {
+      "enable": true
+    },
+    "mie_scattering": false,
+    "rayleigh_scattering": true,
+    "wavelength_shifting": null,
+    "wavelength_shifting2": null
+  },
+  "problem": {
+    "capacity": {
+      "generators": 1,
+      "primaries": 1,
+      "tracks": 1048576
+    },
+    "generator": {
+      "_type": "primary",
+      "primaries": 16777216,
+      "angle": {
+        "_type": "isotropic"
+      },
+      "energy": {
+        "_type": "normal",
+        "mean": 9.68627e-6,
+        "stddev": 0.5e-6
+      },
+      "shape": {
+        "_type": "delta",
+        "value": [100, 250, 600]
+      }
+    },
+    "model": {
+      "geometry": "/workspace/bench/dune-zwires.gdml"
+    },
+    "output_file": "dev.out.json",
+    "seed": 12345,
+    "timers": {
+      "action": false
+    }
+  },
+  "system": {
+    "device": {},
+    "environment": {}
+  }
+}
