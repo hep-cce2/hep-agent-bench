@@ -32,13 +32,18 @@ collect = []
 
 [verifier.env]
 STEP_TOLERANCE = "0.002"
-HEPBENCH_TOOLS = "https://github.com/hep-cce2/hep-agent-bench-tools@v0.1.0"
+# metrics.json flags suspected_copy (reward unchanged) when this share of the expert patch's substantive
+# added lines appears in the agent's src/ changes.
+COPY_FLAG_THRESHOLD = "0.5"
 
 [agent]
 timeout_sec = 18000.0
 
 [environment]
-network_mode = "public"
+# No network once the container is up, so the agent cannot fetch upstream Celeritas (which contains the
+# expert commit). terminus-2 calls the model from the host; for agents installed in the container Harbor
+# allowlists only their inference host. The image build (docker build) still has network.
+network_mode = "no-network"
 build_timeout_sec = 1800.0
 os = "linux"
 gpus = 1

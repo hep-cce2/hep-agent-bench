@@ -6,6 +6,7 @@ Development setup in `/workspace/bench`:
 
 - `build.sh SOURCE_DIR BUILD_DIR` configures and builds `celer-optical` with exactly the options the grader uses (CUDA for the GPU in this container, double precision, ORANGE geometry, Geant4 for the GDML and optical material data). `bash /workspace/bench/build.sh /workspace/celeritas /workspace/build` gives `/workspace/build/bin/celer-optical`.
 - `dev.inp.json` is a development problem: 16.8 M optical photons (≈9.7 eV, isotropic) from one point inside the liquid argon, with absorption, Rayleigh scattering and boundary processes. Run it with `/workspace/build/bin/celer-optical dev.inp.json` from `/workspace/bench`; the output JSON reports `result.time.setup` and `result.time.total` (transport) in seconds, and `result.counters` (photons generated, steps).
+- The container has no network access: everything you need (source, compilers, Geant4, CUDA) is installed.
 - The environment's packages are set up by `source /etc/profile.d/celeritas_spack_env.sh` (already in `~/.bashrc`).
 
 How your work is graded, after you finish:

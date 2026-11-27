@@ -4,7 +4,7 @@ Benchmark tasks for AI agents, built from real HEP software problems and curated
 
 New tasks are welcome: see [CONTRIBUTING.md](CONTRIBUTING.md).
 
-## tasks/simulation/celeritas
+## tasks/simulation/celeritas/dune-zwires-pr2255
 
 Speed up [Celeritas](https://github.com/celeritas-project/celeritas) optical-photon transport (`celer-optical`, CUDA, ORANGE geometry) on the DUNE Z-wires geometry without changing its physics. The agent starts from Celeritas `e906a7a8b` on `develop` and gets only a general goal, not where to look. The expert result is the next commit, [celeritas#2255](https://github.com/celeritas-project/celeritas/pull/2255) ("Fix infinities and unions in bounding zone", `d048aa67c`), which fixes ORANGE bounding boxes so that the DUNE photon detectors get finite ones. The dune-perf history (celeritas-project/dune-perf, private) shows it as the single largest step on this problem at that time (355 s → 197 s on a V100).
 
@@ -21,7 +21,7 @@ On the RTX A6000 the expert gives 1.19× on the development problem (baseline 14
 ```bash
 docker pull docker.io/celeritas/ci-rocky-cuda12:2024-12-29
 # Held-out problems (not committed): source positions and seeds drawn from a private seed
-python tasks/simulation/celeritas/tests/make_heldout.py <private-seed> 4
+python tasks/simulation/celeritas/dune-zwires-pr2255/tests/make_heldout.py <private-seed> 4
 ```
 
 The development problem (`environment/bench/dev.inp.json`) and the geometry (`dune-zwires.gdml`, from dune-perf `models/`, derived from DUNE's public `dune10kt_v6_refactored_1x2x6.gdml`; its provenance is in the file header) are committed. The grader uses its own copies in `tests/`.
@@ -29,15 +29,19 @@ The development problem (`environment/bench/dev.inp.json`) and the geometry (`du
 ### Run
 
 ```bash
-CELER_GPU=0 harbor run -p tasks/simulation/celeritas -a oracle
-CELER_GPU=0 harbor run -p tasks/simulation/celeritas -a terminus-2 -m openai/<model> --ak api_base=http://<host>:<port>/v1
+CELER_GPU=0 harbor run -p tasks/simulation/celeritas/dune-zwires-pr2255 -a oracle
+CELER_GPU=0 harbor run -p tasks/simulation/celeritas/dune-zwires-pr2255 -a terminus-2 -m openai/<model> --ak api_base=http://<host>:<port>/v1
 ```
 
 `CELER_GPU` selects the device (default 0). A trial runs 3 builds (about 1 min each on 72 cores) and 12 runs (15–140 s each on the A6000, about 12 min in total).
 
 ### Known limitations
 
-- Same as frnn: shared verifier container, and public network (the agent could fetch upstream Celeritas and find #2255). Restrict `network_mode` for leaderboard runs.
+- **Copying the expert.** The expert is a public, merged PR, so three things guard against copying it:
+  1. `network_mode = "no-network"`: the agent cannot reach GitHub, so it cannot fetch upstream Celeritas. terminus-2 calls the model from the host; for agents installed in the container Harbor allowlists only their inference host. The grader is offline too (hepbench v0.1.0 is vendored in `tests/hepbench`).
+  2. The image holds only the baseline tree, as one fresh commit with no upstream history, and the CI base image predates #2255.
+  3. `metrics.json` reports `expert_overlap`: the share of the expert patch's added code lines (≥ 12 characters, not comments) that also appear in the agent's `src/` changes. `suspected_copy` is set at `COPY_FLAG_THRESHOLD` (0.5) for manual review. It does not change the reward, because the oracle would fail it. This mainly catches a fix the model has memorized: #2255 was merged in Feb 2026 and may be in training data, which no sandbox can prevent.
+- The verifier shares the agent's container (as in frnn), so a root agent could tamper with the toolchain. Use `verifier.environment_mode = "separate"` for adversarial runs.
 - The gate checks photon count and total steps, not hit-level observables: `celer-optical` at this commit writes no detector scoring.
 - `CUDAARCHS=86` (A6000) is set in the image. Change it there to grade on another GPU.
 
