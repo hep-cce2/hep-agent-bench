@@ -1,0 +1,49 @@
+schema_version = "1.4"
+# The agent's final Celeritas tree, with its .git, so `git diff` shows the changes; build trees are regenerable.
+artifacts = [{ source = "/workspace/celeritas", exclude = ["build", "build-*"] }]
+
+[task]
+name = "hep-agent-bench/celeritas-dune-zwires-optical"
+version = "0.1.0"
+description = "Speed up Celeritas optical-photon transport (celer-optical, CUDA) on the DUNE Z-wires geometry without changing its physics."
+keywords = ["hep", "cuda", "performance", "monte-carlo", "geometry", "dune"]
+[[task.authors]]
+name = "Xiangyang Ju"
+
+[metadata]
+upstream_repository = "https://github.com/celeritas-project/celeritas"
+# Parent of celeritas-project/celeritas#2255 (merge d048aa67c) on develop.
+upstream_commit = "e906a7a8bfc120dd6a64afc2d142a054e82ffd2f"
+expert_commit = "d048aa67cc6e67f5514836b1c24fa894f40936a7"
+base_environment = "docker.io/celeritas/ci-rocky-cuda12:2024-12-29"
+# hep-agent-bench-spec fields (task-format.md)
+hep_agent_bench_spec = "0.1"
+score = "log-gain-vs-expert"
+gain = "sum of baseline (setup + transport) time / sum of agent time, over the held-out problems"
+gate = "physics validation: every photon generated, and total steps within STEP_TOLERANCE (0.2%) of the baseline, on every held-out problem"
+hardware = "1 NVIDIA GPU, sm_86 (RTX A6000)"
+canary = "7053dfb6-bb61-4599-8e65-510d4d55a0bb"
+
+[verifier]
+# Builds agent, baseline and expert (about 1 min each on 48 cores), then runs each on every held-out problem.
+timeout_sec = 7200.0
+environment_mode = "shared"
+collect = []
+
+[verifier.env]
+STEP_TOLERANCE = "0.002"
+HEPBENCH_TOOLS = "https://github.com/hep-cce2/hep-agent-bench-tools@v0.1.0"
+
+[agent]
+timeout_sec = 18000.0
+
+[environment]
+network_mode = "public"
+build_timeout_sec = 1800.0
+os = "linux"
+gpus = 1
+mcp_servers = []
+
+[environment.env]
+
+[solution.env]

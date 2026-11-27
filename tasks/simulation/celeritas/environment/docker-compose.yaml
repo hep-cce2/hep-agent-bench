@@ -1,0 +1,10 @@
+# Pins the GPU. Pick the index from `nvidia-smi -L` on the host, e.g. CELER_GPU=0 harbor run ...
+services:
+  main:
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              device_ids: ["${CELER_GPU:-0}"]
+              capabilities: [gpu]
