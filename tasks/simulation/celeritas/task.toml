@@ -25,7 +25,7 @@ hardware = "1 NVIDIA GPU, sm_86 (RTX A6000)"
 canary = "7053dfb6-bb61-4599-8e65-510d4d55a0bb"
 
 [verifier]
-# Builds agent, baseline and expert (about 1 min each on 48 cores), then runs each on every held-out problem.
+# Builds agent, baseline and expert (about 1 min each on 72 cores), then runs each on every held-out problem.
 timeout_sec = 7200.0
 environment_mode = "shared"
 collect = []

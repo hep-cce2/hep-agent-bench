@@ -14,7 +14,7 @@ Speed up [Celeritas](https://github.com/celeritas-project/celeritas) optical-pho
 2. time = `setup` + `total` (transport) from the `celer-optical` output, summed over the problems;
 3. speedup = baseline time / agent time, and reward = `min(1, log(agent speedup) / log(expert speedup))`.
 
-On the RTX A6000 the expert gives about 1.19× on the development problem (baseline 142 s, expert 119 s). This is smaller than on a V100 because FP64 is slow on the A6000.
+On the RTX A6000 the expert gives 1.19× on the development problem (baseline 142 s, expert 119 s) and 1.20× over 4 held-out problems (262 s → 218 s), with identical step counts. The oracle scores 1.0. The gain is smaller than on a V100 because FP64 is slow on the A6000.
 
 ### Setup on the GPU host
 
@@ -33,7 +33,7 @@ CELER_GPU=0 harbor run -p tasks/simulation/celeritas -a oracle
 CELER_GPU=0 harbor run -p tasks/simulation/celeritas -a terminus-2 -m openai/<model> --ak api_base=http://<host>:<port>/v1
 ```
 
-`CELER_GPU` selects the device (default 0). A trial runs 3 builds (about 1 min each on 48 cores) and 12 runs (about 2–2.5 min each on the A6000).
+`CELER_GPU` selects the device (default 0). A trial runs 3 builds (about 1 min each on 72 cores) and 12 runs (15–140 s each on the A6000, about 12 min in total).
 
 ### Known limitations
 
